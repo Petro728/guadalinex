@@ -514,4 +514,3 @@ if __name__ == "__main__":
         show_loader()
     else:
         show_setup()
-
