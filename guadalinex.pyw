@@ -256,7 +256,7 @@ def open_browser_app(parent):
         "inicio": "Bienvenido al Navegador de Guadalinex v1.\n\nEsto es una página simulada.",
         "guadalinex": "Guadalinex v1 fue una distribución GNU/Linux promovida por la Junta de Andalucía.",
         "ayuda": "Ayuda del navegador:\n- Escribe 'inicio', 'guadalinex' o 'ayuda'.",
-        "guadalinex/que-paso-con-este-distribucion-GNU-Linux": "Desafortunamente, en 2018, era discontinuado. Pero, como esto es una simulación, no pasaría nada."
+        "que-paso-con-este-OS": "Desafortunamente, en 2018, era discontinuado. Pero, como esto es una simulación, no pasaría nada."
     }
 
     def load_page():
@@ -514,5 +514,6 @@ if __name__ == "__main__":
         show_loader()
     else:
         show_setup()
+
 
 
