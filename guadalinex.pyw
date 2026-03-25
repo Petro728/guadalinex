@@ -14,9 +14,269 @@ PANEL_COLOR = "#3c3c3c"
 PANEL_HEIGHT = 32
 
 CURRENT_USER = None
-CURRENT_LANG = None
+CURRENT_LANG = "Español"
 
-# Base template for a user's home
+# ---------- Translations ----------
+
+TRANSLATIONS = {
+    "Español": {
+        "setup_title": "Configuración inicial de Guadalinex v1",
+        "welcome": "Bienvenido a Guadalinex v1",
+        "setup_intro": "Antes de comenzar, realiza la configuración inicial.",
+        "username_label": "Nombre de usuario:",
+        "language_label": "Idioma:",
+        "finish_setup": "Finalizar configuración",
+        "error_no_username": "Debes introducir un nombre de usuario.",
+        "loader_title": "Guadalinex v1",
+        "loading": "Cargando el sistema...",
+        "loading_status_initial": "Inicializando módulos...",
+        "desktop_title": "Escritorio Guadalinex v1 (simulado)",
+        "menu_main": "Guadalinex",
+        "menu_browser": "Navegador",
+        "menu_home": "Home",
+        "menu_terminal": "Terminal",
+        "menu_antivirus": "Antivirus",
+        "menu_about": "Acerca de Guadalinex",
+        "menu_reset_setup": "Reiniciar configuración",
+        "menu_shutdown": "Apagar",
+        "about_text": "Guadalinex v1 (simulado en Python)",
+        "home_title": "Carpeta personal",
+        "browser_title": "Navegador web",
+        "browser_page_start": "Bienvenido al Navegador de Guadalinex v1.\n\nEsto es una página simulada.",
+        "browser_page_guadalinex": "Guadalinex v1 fue una distribución GNU/Linux promovida por la Junta de Andalucía.",
+        "browser_page_help": "Ayuda del navegador:\n- Escribe 'inicio', 'guadalinex' o 'ayuda'.",
+        "browser_not_found": "Página no encontrada.",
+        "terminal_title": "Terminal",
+        "terminal_header": "Terminal de Guadalinex v1",
+        "terminal_help": "Escribe 'help' para ayuda.",
+        "antivirus_title": "Antivirus Guadalinex",
+        "antivirus_scanning": "Escaneando el sistema...",
+        "antivirus_no_threats": "No se encontraron amenazas.",
+        "antivirus_threats_found": "Amenazas detectadas:",
+        "shutdown_confirm_title": "Apagar",
+        "shutdown_confirm_text": "¿Seguro que quieres apagar Guadalinex?",
+        "shutdown_screen_text": "Apagando Guadalinex...",
+        "reset_done": "La configuración inicial se ha restablecido.\nReinicia Guadalinex.",
+        "shell_help": "Comandos: listar/ls, cambiar/cd, mostrar/cat, ruta/pwd, clear, exit, help/ayuda",
+    },
+    "Inglés": {
+        "setup_title": "Initial setup of Guadalinex v1",
+        "welcome": "Welcome to Guadalinex v1",
+        "setup_intro": "Before we begin, complete the initial setup.",
+        "username_label": "Username:",
+        "language_label": "Language:",
+        "finish_setup": "Finish setup",
+        "error_no_username": "You must enter a username.",
+        "loader_title": "Guadalinex v1",
+        "loading": "Loading system...",
+        "loading_status_initial": "Initializing modules...",
+        "desktop_title": "Guadalinex v1 Desktop (simulated)",
+        "menu_main": "Guadalinex",
+        "menu_browser": "Browser",
+        "menu_home": "Home",
+        "menu_terminal": "Terminal",
+        "menu_antivirus": "Antivirus",
+        "menu_about": "About Guadalinex",
+        "menu_reset_setup": "Reset setup",
+        "menu_shutdown": "Shut down",
+        "about_text": "Guadalinex v1 (simulated in Python)",
+        "home_title": "Home folder",
+        "browser_title": "Web Browser",
+        "browser_page_start": "Welcome to the Guadalinex v1 Browser.\n\nThis is a simulated page.",
+        "browser_page_guadalinex": "Guadalinex v1 was a GNU/Linux distribution promoted by the Andalusian government.",
+        "browser_page_help": "Browser help:\n- Type 'inicio', 'guadalinex' or 'ayuda'.",
+        "browser_not_found": "Page not found.",
+        "terminal_title": "Terminal",
+        "terminal_header": "Guadalinex v1 Terminal",
+        "terminal_help": "Type 'help' for assistance.",
+        "antivirus_title": "Guadalinex Antivirus",
+        "antivirus_scanning": "Scanning system...",
+        "antivirus_no_threats": "No threats found.",
+        "antivirus_threats_found": "Threats detected:",
+        "shutdown_confirm_title": "Shut down",
+        "shutdown_confirm_text": "Are you sure you want to shut down Guadalinex?",
+        "shutdown_screen_text": "Shutting down Guadalinex...",
+        "reset_done": "Initial setup has been reset.\nRestart Guadalinex.",
+        "shell_help": "Commands: ls, cd, cat, pwd, clear, exit, help",
+    },
+    "Catalán": {
+        "setup_title": "Configuració inicial de Guadalinex v1",
+        "welcome": "Benvingut a Guadalinex v1",
+        "setup_intro": "Abans de començar, fes la configuració inicial.",
+        "username_label": "Nom d'usuari:",
+        "language_label": "Idioma:",
+        "finish_setup": "Finalitzar configuració",
+        "error_no_username": "Has d'introduir un nom d'usuari.",
+        "loader_title": "Guadalinex v1",
+        "loading": "Carregant el sistema...",
+        "loading_status_initial": "Inicialitzant mòduls...",
+        "desktop_title": "Escriptori Guadalinex v1 (simulat)",
+        "menu_main": "Guadalinex",
+        "menu_browser": "Navegador",
+        "menu_home": "Home",
+        "menu_terminal": "Terminal",
+        "menu_antivirus": "Antivirus",
+        "menu_about": "Quant a Guadalinex",
+        "menu_reset_setup": "Reiniciar configuració",
+        "menu_shutdown": "Apagar",
+        "about_text": "Guadalinex v1 (simulat en Python)",
+        "home_title": "Carpeta personal",
+        "browser_title": "Navegador web",
+        "browser_page_start": "Benvingut al Navegador de Guadalinex v1.\n\nAixò és una pàgina simulada.",
+        "browser_page_guadalinex": "Guadalinex v1 va ser una distribució GNU/Linux promoguda per la Junta d'Andalusia.",
+        "browser_page_help": "Ajuda del navegador:\n- Escriu 'inicio', 'guadalinex' o 'ayuda'.",
+        "browser_not_found": "Pàgina no trobada.",
+        "terminal_title": "Terminal",
+        "terminal_header": "Terminal de Guadalinex v1",
+        "terminal_help": "Escriu 'help' per ajuda.",
+        "antivirus_title": "Antivirus Guadalinex",
+        "antivirus_scanning": "Escanejant el sistema...",
+        "antivirus_no_threats": "No s'han trobat amenaces.",
+        "antivirus_threats_found": "Amenaces detectades:",
+        "shutdown_confirm_title": "Apagar",
+        "shutdown_confirm_text": "Segur que vols apagar Guadalinex?",
+        "shutdown_screen_text": "Apagant Guadalinex...",
+        "reset_done": "La configuració inicial s'ha restablert.\nReinicia Guadalinex.",
+        "shell_help": "Comandes: llistar/ls, canviar/cd, mostrar/cat, ruta/pwd, clear, exit, ajuda/help",
+    },
+    "Gallego": {
+        "setup_title": "Configuración inicial de Guadalinex v1",
+        "welcome": "Benvido a Guadalinex v1",
+        "setup_intro": "Antes de comezar, realiza a configuración inicial.",
+        "username_label": "Nome de usuario:",
+        "language_label": "Idioma:",
+        "finish_setup": "Finalizar configuración",
+        "error_no_username": "Debes introducir un nome de usuario.",
+        "loader_title": "Guadalinex v1",
+        "loading": "Cargando o sistema...",
+        "loading_status_initial": "Inicializando módulos...",
+        "desktop_title": "Escritorio Guadalinex v1 (simulado)",
+        "menu_main": "Guadalinex",
+        "menu_browser": "Navegador",
+        "menu_home": "Home",
+        "menu_terminal": "Terminal",
+        "menu_antivirus": "Antivirus",
+        "menu_about": "Sobre Guadalinex",
+        "menu_reset_setup": "Reiniciar configuración",
+        "menu_shutdown": "Apagar",
+        "about_text": "Guadalinex v1 (simulado en Python)",
+        "home_title": "Carpeta persoal",
+        "browser_title": "Navegador web",
+        "browser_page_start": "Benvido ao Navegador de Guadalinex v1.\n\nIsto é unha páxina simulada.",
+        "browser_page_guadalinex": "Guadalinex v1 foi unha distribución GNU/Linux promovida pola Xunta de Andalucía.",
+        "browser_page_help": "Axuda do navegador:\n- Escribe 'inicio', 'guadalinex' ou 'ayuda'.",
+        "browser_not_found": "Páxina non atopada.",
+        "terminal_title": "Terminal",
+        "terminal_header": "Terminal de Guadalinex v1",
+        "terminal_help": "Escribe 'help' para axuda.",
+        "antivirus_title": "Antivirus Guadalinex",
+        "antivirus_scanning": "Escaneando o sistema...",
+        "antivirus_no_threats": "Non se atoparon ameazas.",
+        "antivirus_threats_found": "Ameazas detectadas:",
+        "shutdown_confirm_title": "Apagar",
+        "shutdown_confirm_text": "Seguro que queres apagar Guadalinex?",
+        "shutdown_screen_text": "Apagando Guadalinex...",
+        "reset_done": "A configuración inicial foi restablecida.\nReinicia Guadalinex.",
+        "shell_help": "Comandos: listar/ls, cambiar/cd, mostrar/cat, ruta/pwd, clear, exit, axuda/help",
+    },
+    "Pirata": {
+        "setup_title": "First riggin' o' Guadalinex v1",
+        "welcome": "Ahoy! Welcome t' Guadalinex v1!",
+        "setup_intro": "Before we set sail, finish yer riggin'.",
+        "username_label": "Cap'n name:",
+        "language_label": "Tongue:",
+        "finish_setup": "Hoist the colors!",
+        "error_no_username": "Ye must give a name, matey.",
+        "loader_title": "Guadalinex v1",
+        "loading": "Hoistin' the sails...",
+        "loading_status_initial": "Rousin' the crew...",
+        "desktop_title": "Guadalinex v1 Deck (simulated)",
+        "menu_main": "Guadalinex",
+        "menu_browser": "Spyglass",
+        "menu_home": "Quarters",
+        "menu_terminal": "Ship Console",
+        "menu_antivirus": "Anti‑Kraken",
+        "menu_about": "About this vessel",
+        "menu_reset_setup": "Reset riggin'",
+        "menu_shutdown": "Scuttle ship",
+        "about_text": "Guadalinex v1 (a fine vessel forged in Python)",
+        "home_title": "Captain's Quarters",
+        "browser_title": "Spyglass Browser",
+        "browser_page_start": "Ahoy! This be the Spyglass o' Guadalinex v1.\n\nJust a mock sea chart.",
+        "browser_page_guadalinex": "Guadalinex v1 be a GNU/Linux vessel once flown under Andalusian colors.",
+        "browser_page_help": "Spyglass help:\n- Type 'inicio', 'guadalinex' or 'ayuda'.",
+        "browser_not_found": "Nay, that page be lost at sea.",
+        "terminal_title": "Ship Console",
+        "terminal_header": "Guadalinex v1 Ship Console",
+        "terminal_help": "Type 'yarr' or 'help' if ye be lost.",
+        "antivirus_title": "Anti‑Kraken Scanner",
+        "antivirus_scanning": "Searchin' fer cursed cargo...",
+        "antivirus_no_threats": "No cursed cargo found. Seas be calm.",
+        "antivirus_threats_found": "Cursed cargo spotted:",
+        "shutdown_confirm_title": "Scuttle ship",
+        "shutdown_confirm_text": "Be ye sure ye want t' sink this vessel?",
+        "shutdown_screen_text": "Scuttlin' the ship...",
+        "reset_done": "Riggin' reset.\nHoist her again from port.",
+        "shell_help": "Commands: plunder/ls, board/cd, readscroll/cat, wherebe/pwd, clear, abandon/exit, yarr/help",
+    },
+}
+
+# Shell command mapping: canonical -> localized
+SHELL_COMMANDS = {
+    "Español": {
+        "ls": ["ls", "listar"],
+        "cd": ["cd", "cambiar"],
+        "cat": ["cat", "mostrar"],
+        "pwd": ["pwd", "ruta"],
+        "help": ["help", "ayuda"],
+        "clear": ["clear"],
+        "exit": ["exit"],
+    },
+    "Inglés": {
+        "ls": ["ls"],
+        "cd": ["cd"],
+        "cat": ["cat"],
+        "pwd": ["pwd"],
+        "help": ["help"],
+        "clear": ["clear"],
+        "exit": ["exit"],
+    },
+    "Catalán": {
+        "ls": ["ls", "llistar"],
+        "cd": ["cd", "canviar"],
+        "cat": ["cat", "mostrar"],
+        "pwd": ["pwd", "ruta"],
+        "help": ["help", "ajuda"],
+        "clear": ["clear"],
+        "exit": ["exit"],
+    },
+    "Gallego": {
+        "ls": ["ls", "listar"],
+        "cd": ["cd", "cambiar"],
+        "cat": ["cat", "mostrar"],
+        "pwd": ["pwd", "ruta"],
+        "help": ["help", "axuda"],
+        "clear": ["clear"],
+        "exit": ["exit"],
+    },
+    "Pirata": {
+        "ls": ["ls", "plunder"],
+        "cd": ["cd", "board"],
+        "cat": ["cat", "readscroll"],
+        "pwd": ["pwd", "wherebe"],
+        "help": ["help", "yarr"],
+        "clear": ["clear"],
+        "exit": ["exit", "abandon"],
+    },
+}
+
+def T(key: str) -> str:
+    lang = TRANSLATIONS.get(CURRENT_LANG, TRANSLATIONS["Español"])
+    return lang.get(key, TRANSLATIONS["Español"].get(key, key))
+
+
+# ---------- VFS ----------
+
 BASE_USER_FS = {
     "Documentos": {
         "bienvenida.txt": "Bienvenido a Guadalinex v1 simulado.\nEste es tu directorio personal."
@@ -25,13 +285,11 @@ BASE_USER_FS = {
     "Descargas": {}
 }
 
-# Global VFS, initialized after we know the user
 VFS = {}
 
 
 def init_vfs_for_user(username: str):
     global VFS
-    # Deep-ish copy of BASE_USER_FS
     user_home = {}
     for folder, content in BASE_USER_FS.items():
         user_home[folder] = copy.deepcopy(content)
@@ -57,19 +315,25 @@ def load_setup_config():
     init_vfs_for_user(CURRENT_USER)
 
 
+def reset_setup():
+    if SETUP_FILE.exists():
+        SETUP_FILE.unlink()
+    messagebox.showinfo("Reset", T("reset_done"))
+
+
 # ---------- Setup screen ----------
 
 class GuadalinexSetup(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("Configuración inicial de Guadalinex v1")
+        self.title(T("setup_title"))
         self.geometry("500x300")
         self.configure(bg="#4f7fb3")
         self.resizable(False, False)
 
         tk.Label(
             self,
-            text="Bienvenido a Guadalinex v1",
+            text=T("welcome"),
             font=("Sans", 22, "bold"),
             fg="white",
             bg="#4f7fb3"
@@ -77,7 +341,7 @@ class GuadalinexSetup(tk.Tk):
 
         tk.Label(
             self,
-            text="Antes de comenzar, realiza la configuración inicial.",
+            text=T("setup_intro"),
             fg="white",
             bg="#4f7fb3"
         ).pack(pady=10)
@@ -85,22 +349,22 @@ class GuadalinexSetup(tk.Tk):
         frame = tk.Frame(self, bg="#4f7fb3")
         frame.pack(pady=10)
 
-        tk.Label(frame, text="Nombre de usuario:", fg="white", bg="#4f7fb3").grid(row=0, column=0, sticky="w")
+        tk.Label(frame, text=T("username_label"), fg="white", bg="#4f7fb3").grid(row=0, column=0, sticky="w")
         self.username = tk.Entry(frame)
         self.username.grid(row=0, column=1)
 
-        tk.Label(frame, text="Idioma:", fg="white", bg="#4f7fb3").grid(row=1, column=0, sticky="w")
+        tk.Label(frame, text=T("language_label"), fg="white", bg="#4f7fb3").grid(row=1, column=0, sticky="w")
         self.language = tk.StringVar(value="Español")
-        tk.OptionMenu(frame, self.language, "Español").grid(row=1, column=1)
+        tk.OptionMenu(frame, self.language, "Español", "Inglés", "Catalán", "Gallego", "Pirata").grid(row=1, column=1)
 
-        tk.Button(self, text="Finalizar configuración", command=self.finish_setup).pack(pady=20)
+        tk.Button(self, text=T("finish_setup"), command=self.finish_setup).pack(pady=20)
 
     def finish_setup(self):
         global CURRENT_USER, CURRENT_LANG
 
         username = self.username.get().strip()
         if not username:
-            messagebox.showerror("Error", "Debes introducir un nombre de usuario.")
+            messagebox.showerror("Error", T("error_no_username"))
             return
 
         CURRENT_USER = username
@@ -125,7 +389,7 @@ class GuadalinexSetup(tk.Tk):
 class GuadalinexLoader(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("Guadalinex v1")
+        self.title(T("loader_title"))
         self.resizable(False, False)
         self.geometry("500x300")
         self.configure(bg="#4f7fb3")
@@ -135,7 +399,7 @@ class GuadalinexLoader(tk.Tk):
 
         tk.Label(
             container,
-            text="Guadalinex v1",
+            text=T("welcome"),
             font=("Sans", 28, "bold"),
             fg="white",
             bg="#4f7fb3"
@@ -143,7 +407,7 @@ class GuadalinexLoader(tk.Tk):
 
         tk.Label(
             container,
-            text="Cargando el sistema...",
+            text=T("loading"),
             font=("Sans", 12),
             fg="white",
             bg="#4f7fb3"
@@ -154,7 +418,7 @@ class GuadalinexLoader(tk.Tk):
 
         self.status_label = tk.Label(
             container,
-            text="Inicializando módulos...",
+            text=T("loading_status_initial"),
             font=("Sans", 10),
             fg="white",
             bg="#4f7fb3"
@@ -165,7 +429,7 @@ class GuadalinexLoader(tk.Tk):
 
     def fake_boot(self):
         steps = [
-            "Cargando kernel...",
+            T("loading_status_initial"),
             "Montando sistema de archivos...",
             "Iniciando servicios básicos...",
             "Configurando entorno de usuario...",
@@ -188,7 +452,7 @@ class GuadalinexLoader(tk.Tk):
 
 def open_home_app(parent):
     win = tk.Toplevel(parent)
-    win.title(f"Carpeta personal de {CURRENT_USER}")
+    win.title(f"{T('home_title')} - {CURRENT_USER}")
     win.geometry("500x380")
     win.configure(bg="#dcdcdc")
 
@@ -235,11 +499,11 @@ def open_home_app(parent):
     file_list.bind("<Double-Button-1>", open_file)
 
 
-# ---------- Apps: Navegador ----------
+# ---------- Apps: Browser ----------
 
 def open_browser_app(parent):
     win = tk.Toplevel(parent)
-    win.title("Navegador web")
+    win.title(T("browser_title"))
     win.geometry("600x400")
     win.configure(bg="#dcdcdc")
 
@@ -253,15 +517,15 @@ def open_browser_app(parent):
     page.pack(fill="both", expand=True)
 
     PAGES = {
-        "inicio": "Bienvenido al Navegador de Guadalinex v1.\n\nEsto es una página simulada.",
-        "guadalinex": "Guadalinex v1 fue una distribución GNU/Linux promovida por la Junta de Andalucía.",
-        "ayuda": "Ayuda del navegador:\n- Escribe 'inicio', 'guadalinex' o 'ayuda'."
+        "inicio": T("browser_page_start"),
+        "guadalinex": T("browser_page_guadalinex"),
+        "ayuda": T("browser_page_help"),
     }
 
     def load_page():
         key = url.get().strip().lower()
         page.delete("1.0", "end")
-        page.insert("1.0", PAGES.get(key, "Página no encontrada."))
+        page.insert("1.0", PAGES.get(key, T("browser_not_found")))
 
     tk.Button(toolbar, text="Ir", command=load_page).pack(side="right", padx=5)
 
@@ -274,7 +538,6 @@ def open_browser_app(parent):
 class MiniShell:
     def __init__(self, username: str):
         self.username = username
-        # cwd as list of path components, starting at ["home", username]
         self.cwd = ["home", username]
 
     def get_cwd_node(self):
@@ -284,28 +547,35 @@ class MiniShell:
         return node
 
     def get_pwd(self):
-        # Build /home/<user>/...
         if self.cwd == ["home", self.username]:
             return f"/home/{self.username}"
         sub = "/".join(self.cwd[2:])
         return f"/home/{self.username}/" + sub
 
     def get_prompt_path(self):
-        # Show ~ for home, ~/subdir for others
         if self.cwd == ["home", self.username]:
             return "~"
         sub = "/".join(self.cwd[2:])
         return f"~/{sub}"
 
+    def resolve_command(self, cmd: str) -> str:
+        mapping = SHELL_COMMANDS.get(CURRENT_LANG, SHELL_COMMANDS["Español"])
+        for canonical, aliases in mapping.items():
+            if cmd in aliases:
+                return canonical
+        return cmd  # unknown
+
     def run(self, cmd: str):
         if not cmd:
             return ""
         parts = cmd.split()
-        c = parts[0]
+        raw_c = parts[0]
         args = parts[1:]
 
+        c = self.resolve_command(raw_c)
+
         if c == "help":
-            return "Comandos: help, ls, cd, cat, pwd, clear, exit"
+            return T("shell_help")
         if c == "pwd":
             return self.get_pwd()
         if c == "ls":
@@ -357,7 +627,7 @@ class MiniShell:
 
 def open_terminal_app(parent, shell: MiniShell):
     win = tk.Toplevel(parent)
-    win.title("Terminal")
+    win.title(T("terminal_title"))
     win.geometry("600x350")
     win.configure(bg="#000000")
 
@@ -370,7 +640,7 @@ def open_terminal_app(parent, shell: MiniShell):
         text.insert("end", prompt)
         text.see("end")
 
-    text.insert("end", "Guadalinex v1 Terminal\nEscribe 'help' para ayuda.\n\n")
+    text.insert("end", f"{T('terminal_header')}\n{T('terminal_help')}\n\n")
     write_prompt()
 
     def on_enter(event):
@@ -387,7 +657,7 @@ def open_terminal_app(parent, shell: MiniShell):
 
         if output == "\f":
             text.delete("1.0", "end")
-            text.insert("end", "Guadalinex v1 Terminal\nEscribe 'help' para ayuda.\n\n")
+            text.insert("end", f"{T('terminal_header')}\n{T('terminal_help')}\n\n")
         else:
             text.insert("end", "\n" + output + "\n")
         write_prompt()
@@ -396,12 +666,71 @@ def open_terminal_app(parent, shell: MiniShell):
     text.bind("<Return>", on_enter)
 
 
+# ---------- Antivirus app ----------
+
+def open_antivirus_app(parent):
+    win = tk.Toplevel(parent)
+    win.title(T("antivirus_title"))
+    win.geometry("400x250")
+    win.configure(bg="#dcdcdc")
+
+    label = tk.Label(win, text=T("antivirus_scanning"), bg="#dcdcdc")
+    label.pack(pady=10)
+
+    progress = ttk.Progressbar(win, orient="horizontal", length=300, mode="determinate")
+    progress.pack(pady=20)
+
+    result = tk.Label(win, text="", bg="#dcdcdc")
+    result.pack(pady=10)
+
+    def scan():
+        suspicious = []
+        total = 0
+
+        user_home = VFS["home"][CURRENT_USER]
+        for folder, content in user_home.items():
+            for filename in content:
+                total += 1
+
+        if total == 0:
+            total = 1
+
+        scanned = 0
+        for folder, content in user_home.items():
+            for filename in list(content.keys()):
+                scanned += 1
+                progress["value"] = (scanned / total) * 100
+                win.update_idletasks()
+                time.sleep(0.2)
+
+                if "virus" in filename.lower() or "malware" in filename.lower():
+                    suspicious.append(f"{folder}/{filename}")
+
+        if suspicious:
+            result.config(text=T("antivirus_threats_found") + "\n" + "\n".join(suspicious), fg="red")
+        else:
+            result.config(text=T("antivirus_no_threats"), fg="green")
+
+    threading.Thread(target=scan, daemon=True).start()
+
+
+# ---------- Shutdown screen ----------
+
+def show_shutdown_screen():
+    win = tk.Toplevel()
+    win.title(T("shutdown_confirm_title"))
+    win.geometry("400x200")
+    win.configure(bg="#000000")
+    tk.Label(win, text=T("shutdown_screen_text"), fg="white", bg="black", font=("Sans", 16)).pack(expand=True)
+    win.after(2000, quit)
+
+
 # ---------- Desktop ----------
 
 class GuadalinexDesktop(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("Guadalinex v1 Desktop (simulado)")
+        self.title(T("desktop_title"))
         self.geometry("800x600")
         self.minsize(640, 480)
 
@@ -418,7 +747,7 @@ class GuadalinexDesktop(tk.Tk):
 
         tk.Button(
             self.left_panel,
-            text="Guadalinex",
+            text=T("menu_main"),
             fg="white",
             bg="#2b2b2b",
             command=self.open_main_menu
@@ -426,7 +755,7 @@ class GuadalinexDesktop(tk.Tk):
 
         tk.Button(
             self.left_panel,
-            text="Navegador",
+            text=T("menu_browser"),
             fg="white",
             bg="#555555",
             command=self.open_browser
@@ -434,7 +763,7 @@ class GuadalinexDesktop(tk.Tk):
 
         tk.Button(
             self.left_panel,
-            text="Home",
+            text=T("menu_home"),
             fg="white",
             bg="#555555",
             command=self.open_home
@@ -457,22 +786,25 @@ class GuadalinexDesktop(tk.Tk):
         frame = tk.Frame(self.desktop, bg=WALLPAPER_COLOR)
         frame.place(x=20, y=40)
 
-        self.make_icon(frame, "Home", self.open_home, 0)
-        self.make_icon(frame, "Navegador", self.open_browser, 1)
-        self.make_icon(frame, "Terminal", self.open_terminal, 2)
+        self.make_icon(frame, T("menu_home"), self.open_home, 0)
+        self.make_icon(frame, T("menu_browser"), self.open_browser, 1)
+        self.make_icon(frame, T("menu_terminal"), self.open_terminal, 2)
+        self.make_icon(frame, T("menu_antivirus"), self.open_antivirus, 3)
 
     def make_icon(self, parent, text, command, row):
-        tk.Button(parent, text=text, width=12, height=2, command=command).grid(row=row, pady=10)
+        tk.Button(parent, text=text, width=14, height=2, command=command).grid(row=row, pady=10)
 
     def open_main_menu(self):
         menu = tk.Menu(self, tearoff=0)
-        menu.add_command(label="Navegador", command=self.open_browser)
-        menu.add_command(label="Home", command=self.open_home)
-        menu.add_command(label="Terminal", command=self.open_terminal)
+        menu.add_command(label=T("menu_browser"), command=self.open_browser)
+        menu.add_command(label=T("menu_home"), command=self.open_home)
+        menu.add_command(label=T("menu_terminal"), command=self.open_terminal)
+        menu.add_command(label=T("menu_antivirus"), command=self.open_antivirus)
         menu.add_separator()
-        menu.add_command(label=f"Acerca de Guadalinex ({CURRENT_USER})", command=self.show_about)
+        menu.add_command(label=T("menu_about"), command=self.show_about)
+        menu.add_command(label=T("menu_reset_setup"), command=reset_setup)
         menu.add_separator()
-        menu.add_command(label="Salir de la sesión", command=self.quit)
+        menu.add_command(label=T("menu_shutdown"), command=self.shutdown)
         menu.tk_popup(self.winfo_rootx() + 10, self.winfo_rooty() + 10)
 
     def open_browser(self):
@@ -484,11 +816,19 @@ class GuadalinexDesktop(tk.Tk):
     def open_terminal(self):
         open_terminal_app(self, self.shell)
 
+    def open_antivirus(self):
+        open_antivirus_app(self)
+
     def show_about(self):
         messagebox.showinfo(
-            "Acerca de Guadalinex",
-            f"Guadalinex v1 (simulado en Python)\nUsuario: {CURRENT_USER}\nIdioma: {CURRENT_LANG}"
+            T("menu_about"),
+            f"{T('about_text')}\nUsuario: {CURRENT_USER}\nIdioma: {CURRENT_LANG}"
         )
+
+    def shutdown(self):
+        if messagebox.askyesno(T("shutdown_confirm_title"), T("shutdown_confirm_text")):
+            show_shutdown_screen()
+            self.destroy()
 
 
 # ---------- Entry points ----------
@@ -513,7 +853,3 @@ if __name__ == "__main__":
         show_loader()
     else:
         show_setup()
-
-
-
-
