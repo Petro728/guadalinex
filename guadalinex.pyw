@@ -1,13 +1,17 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, simpledialog
 import time
 import threading
 from pathlib import Path
 import copy
+import json
 
-# ---------- Global config ----------
+# ---------- Paths ----------
 
-SETUP_FILE = Path.home() / ".guadalinex_setup_done"
+BASE_DIR = Path.home()
+ACCOUNTS_FILE = BASE_DIR / ".guadalinex_accounts.json"
+
+# ---------- Globals ----------
 
 WALLPAPER_COLOR = "#6aa84f"
 PANEL_COLOR = "#3c3c3c"
@@ -15,6 +19,7 @@ PANEL_HEIGHT = 32
 
 CURRENT_USER = None
 CURRENT_LANG = "Español"
+ACCOUNTS = {}  # username -> {pin, admin, language}
 
 # ---------- Translations ----------
 
@@ -22,9 +27,11 @@ TRANSLATIONS = {
     "Español": {
         "setup_title": "Configuración inicial de Guadalinex v1",
         "welcome": "Bienvenido a Guadalinex v1",
-        "setup_intro": "Antes de comenzar, realiza la configuración inicial.",
+        "setup_intro": "Antes de comenzar, crea la primera cuenta.",
         "username_label": "Nombre de usuario:",
         "language_label": "Idioma:",
+        "pin_label": "PIN (opcional):",
+        "admin_label": "Esta cuenta es administrador",
         "finish_setup": "Finalizar configuración",
         "error_no_username": "Debes introducir un nombre de usuario.",
         "loader_title": "Guadalinex v1",
@@ -36,8 +43,9 @@ TRANSLATIONS = {
         "menu_home": "Home",
         "menu_terminal": "Terminal",
         "menu_antivirus": "Antivirus",
+        "menu_accounts": "Cuentas",
         "menu_about": "Acerca de Guadalinex",
-        "menu_reset_setup": "Reiniciar configuración",
+        "menu_logout": "Cerrar sesión",
         "menu_shutdown": "Apagar",
         "about_text": "Guadalinex v1 (simulado en Python)",
         "home_title": "Carpeta personal",
@@ -56,15 +64,38 @@ TRANSLATIONS = {
         "shutdown_confirm_title": "Apagar",
         "shutdown_confirm_text": "¿Seguro que quieres apagar Guadalinex?",
         "shutdown_screen_text": "Apagando Guadalinex...",
-        "reset_done": "La configuración inicial se ha restablecido.\nReinicia Guadalinex.",
         "shell_help": "Comandos: listar/ls, cambiar/cd, mostrar/cat, ruta/pwd, clear, exit, help/ayuda",
+        "login_title": "Inicio de sesión de Guadalinex",
+        "login_select_user": "Selecciona un usuario:",
+        "login_pin_prompt": "Introduce el PIN para {user}:",
+        "login_pin_wrong": "PIN incorrecto.",
+        "login_no_users": "No hay cuentas. Reinicia para configurar.",
+        "uac_title": "Control de cuentas",
+        "uac_message": "Esta acción requiere privilegios de administrador.\nIntroduce el PIN de un administrador:",
+        "uac_failed": "PIN de administrador incorrecto.",
+        "accounts_title": "Configuración de cuentas",
+        "accounts_users": "Usuarios:",
+        "accounts_create": "Crear usuario",
+        "accounts_delete": "Eliminar usuario",
+        "accounts_change_pin": "Cambiar PIN",
+        "accounts_toggle_admin": "Alternar admin",
+        "accounts_new_username": "Nuevo nombre de usuario:",
+        "accounts_new_pin": "Nuevo PIN (opcional):",
+        "accounts_is_admin": "¿Administrador?",
+        "accounts_user_exists": "El usuario ya existe.",
+        "accounts_cannot_delete_self": "No puedes eliminar tu propia cuenta mientras estás conectado.",
+        "accounts_confirm_delete": "¿Eliminar la cuenta {user}?",
+        "accounts_no_selection": "Selecciona un usuario.",
+        "accounts_cannot_demote_last_admin": "No puedes quitar el rol de admin del último administrador.",
     },
     "Inglés": {
         "setup_title": "Initial setup of Guadalinex v1",
         "welcome": "Welcome to Guadalinex v1",
-        "setup_intro": "Before we begin, complete the initial setup.",
+        "setup_intro": "Before we begin, create the first account.",
         "username_label": "Username:",
         "language_label": "Language:",
+        "pin_label": "PIN (optional):",
+        "admin_label": "This account is administrator",
         "finish_setup": "Finish setup",
         "error_no_username": "You must enter a username.",
         "loader_title": "Guadalinex v1",
@@ -76,8 +107,9 @@ TRANSLATIONS = {
         "menu_home": "Home",
         "menu_terminal": "Terminal",
         "menu_antivirus": "Antivirus",
+        "menu_accounts": "Accounts",
         "menu_about": "About Guadalinex",
-        "menu_reset_setup": "Reset setup",
+        "menu_logout": "Log out",
         "menu_shutdown": "Shut down",
         "about_text": "Guadalinex v1 (simulated in Python)",
         "home_title": "Home folder",
@@ -96,15 +128,38 @@ TRANSLATIONS = {
         "shutdown_confirm_title": "Shut down",
         "shutdown_confirm_text": "Are you sure you want to shut down Guadalinex?",
         "shutdown_screen_text": "Shutting down Guadalinex...",
-        "reset_done": "Initial setup has been reset.\nRestart Guadalinex.",
         "shell_help": "Commands: ls, cd, cat, pwd, clear, exit, help",
+        "login_title": "Guadalinex Login",
+        "login_select_user": "Select a user:",
+        "login_pin_prompt": "Enter PIN for {user}:",
+        "login_pin_wrong": "Incorrect PIN.",
+        "login_no_users": "No accounts found. Restart to run setup.",
+        "uac_title": "User Account Control",
+        "uac_message": "This action requires administrator privileges.\nEnter an admin PIN:",
+        "uac_failed": "Admin PIN incorrect.",
+        "accounts_title": "Account settings",
+        "accounts_users": "Users:",
+        "accounts_create": "Create user",
+        "accounts_delete": "Delete user",
+        "accounts_change_pin": "Change PIN",
+        "accounts_toggle_admin": "Toggle admin",
+        "accounts_new_username": "New username:",
+        "accounts_new_pin": "New PIN (optional):",
+        "accounts_is_admin": "Administrator?",
+        "accounts_user_exists": "User already exists.",
+        "accounts_cannot_delete_self": "You cannot delete the account you are logged into.",
+        "accounts_confirm_delete": "Delete account {user}?",
+        "accounts_no_selection": "Select a user.",
+        "accounts_cannot_demote_last_admin": "You cannot remove admin role from the last administrator.",
     },
     "Catalán": {
         "setup_title": "Configuració inicial de Guadalinex v1",
         "welcome": "Benvingut a Guadalinex v1",
-        "setup_intro": "Abans de començar, fes la configuració inicial.",
+        "setup_intro": "Abans de començar, crea el primer compte.",
         "username_label": "Nom d'usuari:",
         "language_label": "Idioma:",
+        "pin_label": "PIN (opcional):",
+        "admin_label": "Aquest compte és administrador",
         "finish_setup": "Finalitzar configuració",
         "error_no_username": "Has d'introduir un nom d'usuari.",
         "loader_title": "Guadalinex v1",
@@ -116,8 +171,9 @@ TRANSLATIONS = {
         "menu_home": "Home",
         "menu_terminal": "Terminal",
         "menu_antivirus": "Antivirus",
+        "menu_accounts": "Comptes",
         "menu_about": "Quant a Guadalinex",
-        "menu_reset_setup": "Reiniciar configuració",
+        "menu_logout": "Tancar sessió",
         "menu_shutdown": "Apagar",
         "about_text": "Guadalinex v1 (simulat en Python)",
         "home_title": "Carpeta personal",
@@ -136,15 +192,38 @@ TRANSLATIONS = {
         "shutdown_confirm_title": "Apagar",
         "shutdown_confirm_text": "Segur que vols apagar Guadalinex?",
         "shutdown_screen_text": "Apagant Guadalinex...",
-        "reset_done": "La configuració inicial s'ha restablert.\nReinicia Guadalinex.",
         "shell_help": "Comandes: llistar/ls, canviar/cd, mostrar/cat, ruta/pwd, clear, exit, ajuda/help",
+        "login_title": "Inici de sessió de Guadalinex",
+        "login_select_user": "Selecciona un usuari:",
+        "login_pin_prompt": "Introdueix el PIN per {user}:",
+        "login_pin_wrong": "PIN incorrecte.",
+        "login_no_users": "No hi ha comptes. Reinicia per configurar.",
+        "uac_title": "Control de comptes",
+        "uac_message": "Aquesta acció requereix privilegis d'administrador.\nIntrodueix el PIN d'un administrador:",
+        "uac_failed": "PIN d'administrador incorrecte.",
+        "accounts_title": "Configuració de comptes",
+        "accounts_users": "Usuaris:",
+        "accounts_create": "Crear usuari",
+        "accounts_delete": "Eliminar usuari",
+        "accounts_change_pin": "Canviar PIN",
+        "accounts_toggle_admin": "Alternar admin",
+        "accounts_new_username": "Nou nom d'usuari:",
+        "accounts_new_pin": "Nou PIN (opcional):",
+        "accounts_is_admin": "Administrador?",
+        "accounts_user_exists": "L'usuari ja existeix.",
+        "accounts_cannot_delete_self": "No pots eliminar el compte amb el qual has iniciat sessió.",
+        "accounts_confirm_delete": "Eliminar el compte {user}?",
+        "accounts_no_selection": "Selecciona un usuari.",
+        "accounts_cannot_demote_last_admin": "No pots treure el rol d'admin de l'últim administrador.",
     },
     "Gallego": {
         "setup_title": "Configuración inicial de Guadalinex v1",
         "welcome": "Benvido a Guadalinex v1",
-        "setup_intro": "Antes de comezar, realiza a configuración inicial.",
+        "setup_intro": "Antes de comezar, crea a primeira conta.",
         "username_label": "Nome de usuario:",
         "language_label": "Idioma:",
+        "pin_label": "PIN (opcional):",
+        "admin_label": "Esta conta é administrador",
         "finish_setup": "Finalizar configuración",
         "error_no_username": "Debes introducir un nome de usuario.",
         "loader_title": "Guadalinex v1",
@@ -156,8 +235,9 @@ TRANSLATIONS = {
         "menu_home": "Home",
         "menu_terminal": "Terminal",
         "menu_antivirus": "Antivirus",
+        "menu_accounts": "Contas",
         "menu_about": "Sobre Guadalinex",
-        "menu_reset_setup": "Reiniciar configuración",
+        "menu_logout": "Pechar sesión",
         "menu_shutdown": "Apagar",
         "about_text": "Guadalinex v1 (simulado en Python)",
         "home_title": "Carpeta persoal",
@@ -176,15 +256,38 @@ TRANSLATIONS = {
         "shutdown_confirm_title": "Apagar",
         "shutdown_confirm_text": "Seguro que queres apagar Guadalinex?",
         "shutdown_screen_text": "Apagando Guadalinex...",
-        "reset_done": "A configuración inicial foi restablecida.\nReinicia Guadalinex.",
         "shell_help": "Comandos: listar/ls, cambiar/cd, mostrar/cat, ruta/pwd, clear, exit, axuda/help",
+        "login_title": "Inicio de sesión de Guadalinex",
+        "login_select_user": "Selecciona un usuario:",
+        "login_pin_prompt": "Introduce o PIN para {user}:",
+        "login_pin_wrong": "PIN incorrecto.",
+        "login_no_users": "Non hai contas. Reinicia para configurar.",
+        "uac_title": "Control de contas",
+        "uac_message": "Esta acción require privilexios de administrador.\nIntroduce o PIN dun administrador:",
+        "uac_failed": "PIN de administrador incorrecto.",
+        "accounts_title": "Configuración de contas",
+        "accounts_users": "Usuarios:",
+        "accounts_create": "Crear usuario",
+        "accounts_delete": "Eliminar usuario",
+        "accounts_change_pin": "Cambiar PIN",
+        "accounts_toggle_admin": "Alternar admin",
+        "accounts_new_username": "Novo nome de usuario:",
+        "accounts_new_pin": "Novo PIN (opcional):",
+        "accounts_is_admin": "Administrador?",
+        "accounts_user_exists": "O usuario xa existe.",
+        "accounts_cannot_delete_self": "Non podes eliminar a conta coa que iniciaches sesión.",
+        "accounts_confirm_delete": "Eliminar a conta {user}?",
+        "accounts_no_selection": "Selecciona un usuario.",
+        "accounts_cannot_demote_last_admin": "Non podes quitar o rol de admin do último administrador.",
     },
     "Pirata": {
         "setup_title": "First riggin' o' Guadalinex v1",
         "welcome": "Ahoy! Welcome t' Guadalinex v1!",
-        "setup_intro": "Before we set sail, finish yer riggin'.",
+        "setup_intro": "Before we set sail, forge the first captain.",
         "username_label": "Cap'n name:",
         "language_label": "Tongue:",
+        "pin_label": "Secret code (PIN, optional):",
+        "admin_label": "This cap'n commands the ship (admin)",
         "finish_setup": "Hoist the colors!",
         "error_no_username": "Ye must give a name, matey.",
         "loader_title": "Guadalinex v1",
@@ -196,8 +299,9 @@ TRANSLATIONS = {
         "menu_home": "Quarters",
         "menu_terminal": "Ship Console",
         "menu_antivirus": "Anti‑Kraken",
+        "menu_accounts": "Crew roster",
         "menu_about": "About this vessel",
-        "menu_reset_setup": "Reset riggin'",
+        "menu_logout": "Leave deck",
         "menu_shutdown": "Scuttle ship",
         "about_text": "Guadalinex v1 (a fine vessel forged in Python)",
         "home_title": "Captain's Quarters",
@@ -216,8 +320,29 @@ TRANSLATIONS = {
         "shutdown_confirm_title": "Scuttle ship",
         "shutdown_confirm_text": "Be ye sure ye want t' sink this vessel?",
         "shutdown_screen_text": "Scuttlin' the ship...",
-        "reset_done": "Riggin' reset.\nHoist her again from port.",
         "shell_help": "Commands: plunder/ls, board/cd, readscroll/cat, wherebe/pwd, clear, abandon/exit, yarr/help",
+        "login_title": "Guadalinex Gangplank",
+        "login_select_user": "Choose yer cap'n:",
+        "login_pin_prompt": "Whisper the secret code fer {user}:",
+        "login_pin_wrong": "That code be wrong, matey.",
+        "login_no_users": "No crew aboard. Restart t' rig the first cap'n.",
+        "uac_title": "Captain's Seal",
+        "uac_message": "This deed needs a captain's blessing.\nGive the secret code o' an admin:",
+        "uac_failed": "That be not a captain's code.",
+        "accounts_title": "Crew roster & ranks",
+        "accounts_users": "Crew:",
+        "accounts_create": "Add matey",
+        "accounts_delete": "Cast overboard",
+        "accounts_change_pin": "Change secret code",
+        "accounts_toggle_admin": "Promote/Demote captain",
+        "accounts_new_username": "New matey's name:",
+        "accounts_new_pin": "New secret code (optional):",
+        "accounts_is_admin": "Make this matey a captain?",
+        "accounts_user_exists": "That matey already sails here.",
+        "accounts_cannot_delete_self": "Ye can't cast yerself overboard while on deck.",
+        "accounts_confirm_delete": "Cast {user} overboard?",
+        "accounts_no_selection": "Pick a matey first.",
+        "accounts_cannot_demote_last_admin": "Ye can't demote the last captain aboard.",
     },
 }
 
@@ -274,6 +399,33 @@ def T(key: str) -> str:
     lang = TRANSLATIONS.get(CURRENT_LANG, TRANSLATIONS["Español"])
     return lang.get(key, TRANSLATIONS["Español"].get(key, key))
 
+# ---------- Accounts management ----------
+
+def load_accounts():
+    global ACCOUNTS
+    if ACCOUNTS_FILE.exists():
+        try:
+            with open(ACCOUNTS_FILE, "r", encoding="utf-8") as f:
+                ACCOUNTS = json.load(f)
+        except Exception:
+            ACCOUNTS = {}
+    else:
+        ACCOUNTS = {}
+
+def save_accounts():
+    with open(ACCOUNTS_FILE, "w", encoding="utf-8") as f:
+        json.dump(ACCOUNTS, f, indent=2, ensure_ascii=False)
+
+def any_admin_exists():
+    return any(info.get("admin") for info in ACCOUNTS.values())
+
+def is_admin(user):
+    info = ACCOUNTS.get(user, {})
+    return bool(info.get("admin"))
+
+def get_user_language(user):
+    info = ACCOUNTS.get(user, {})
+    return info.get("language", "Español")
 
 # ---------- VFS ----------
 
@@ -287,7 +439,6 @@ BASE_USER_FS = {
 
 VFS = {}
 
-
 def init_vfs_for_user(username: str):
     global VFS
     user_home = {}
@@ -299,35 +450,13 @@ def init_vfs_for_user(username: str):
         }
     }
 
-
-def load_setup_config():
-    global CURRENT_USER, CURRENT_LANG
-    if not SETUP_FILE.exists():
-        return
-    data = {}
-    with open(SETUP_FILE, "r", encoding="utf-8") as f:
-        for line in f:
-            if "=" in line:
-                k, v = line.strip().split("=", 1)
-                data[k] = v
-    CURRENT_USER = data.get("username", "usuario")
-    CURRENT_LANG = data.get("language", "Español")
-    init_vfs_for_user(CURRENT_USER)
-
-
-def reset_setup():
-    if SETUP_FILE.exists():
-        SETUP_FILE.unlink()
-    messagebox.showinfo("Reset", T("reset_done"))
-
-
 # ---------- Setup screen ----------
 
 class GuadalinexSetup(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title(T("setup_title"))
-        self.geometry("500x300")
+        self.geometry("500x350")
         self.configure(bg="#4f7fb3")
         self.resizable(False, False)
 
@@ -357,6 +486,21 @@ class GuadalinexSetup(tk.Tk):
         self.language = tk.StringVar(value="Español")
         tk.OptionMenu(frame, self.language, "Español", "Inglés", "Catalán", "Gallego", "Pirata").grid(row=1, column=1)
 
+        tk.Label(frame, text=T("pin_label"), fg="white", bg="#4f7fb3").grid(row=2, column=0, sticky="w")
+        self.pin_entry = tk.Entry(frame, show="*")
+        self.pin_entry.grid(row=2, column=1)
+
+        self.admin_var = tk.BooleanVar(value=True)
+        tk.Checkbutton(
+            frame,
+            text=T("admin_label"),
+            variable=self.admin_var,
+            fg="white",
+            bg="#4f7fb3",
+            selectcolor="#4f7fb3",
+            activebackground="#4f7fb3"
+        ).grid(row=3, column=0, columnspan=2, sticky="w")
+
         tk.Button(self, text=T("finish_setup"), command=self.finish_setup).pack(pady=20)
 
     def finish_setup(self):
@@ -367,22 +511,27 @@ class GuadalinexSetup(tk.Tk):
             messagebox.showerror("Error", T("error_no_username"))
             return
 
+        pin = self.pin_entry.get().strip()
+        lang = self.language.get()
+        admin = self.admin_var.get()
+
+        load_accounts()
+        ACCOUNTS[username] = {
+            "pin": pin,
+            "admin": bool(admin),
+            "language": lang,
+        }
+        save_accounts()
+
         CURRENT_USER = username
-        CURRENT_LANG = self.language.get()
-
-        with open(SETUP_FILE, "w", encoding="utf-8") as f:
-            f.write("setup_done=1\n")
-            f.write(f"username={CURRENT_USER}\n")
-            f.write(f"language={CURRENT_LANG}\n")
-
+        CURRENT_LANG = lang
         init_vfs_for_user(CURRENT_USER)
 
-        self.after(100, self.launch_loader)
+        self.after(100, self.launch_login)
 
-    def launch_loader(self):
+    def launch_login(self):
         self.destroy()
-        show_loader()
-
+        show_login()
 
 # ---------- Loader screen ----------
 
@@ -447,91 +596,89 @@ class GuadalinexLoader(tk.Tk):
         self.destroy()
         show_desktop()
 
+# ---------- Login screen (B1: icon grid) ----------
 
-# ---------- Apps: Home ----------
+class LoginScreen(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title(T("login_title"))
+        self.geometry("600x400")
+        self.configure(bg="#2b3e50")
+        self.resizable(False, False)
 
-def open_home_app(parent):
-    win = tk.Toplevel(parent)
-    win.title(f"{T('home_title')} - {CURRENT_USER}")
-    win.geometry("500x380")
-    win.configure(bg="#dcdcdc")
+        tk.Label(
+            self,
+            text=T("login_title"),
+            font=("Sans", 22, "bold"),
+            fg="white",
+            bg="#2b3e50"
+        ).pack(pady=20)
 
-    left = tk.Frame(win, bg="#ececec", width=160)
-    left.pack(side="left", fill="y")
+        self.users_frame = tk.Frame(self, bg="#2b3e50")
+        self.users_frame.pack(expand=True)
 
-    right = tk.Frame(win, bg="#ffffff")
-    right.pack(side="right", fill="both", expand=True)
+        tk.Label(
+            self,
+            text=T("login_select_user"),
+            fg="white",
+            bg="#2b3e50"
+        ).pack(pady=5)
 
-    folder_list = tk.Listbox(left)
-    folder_list.pack(fill="y", expand=True, padx=5, pady=5)
+        self.draw_users()
 
-    file_list = tk.Listbox(right)
-    file_list.pack(fill="both", expand=True, padx=5, pady=5)
+    def draw_users(self):
+        for w in self.users_frame.winfo_children():
+            w.destroy()
 
-    user_home = VFS["home"][CURRENT_USER]
-
-    for folder in user_home:
-        folder_list.insert("end", folder)
-
-    def show_files(event):
-        if not folder_list.curselection():
+        load_accounts()
+        if not ACCOUNTS:
+            tk.Label(
+                self.users_frame,
+                text=T("login_no_users"),
+                fg="white",
+                bg="#2b3e50"
+            ).pack()
             return
-        file_list.delete(0, "end")
-        folder = folder_list.get(folder_list.curselection())
-        for f in user_home[folder]:
-            file_list.insert("end", f)
 
-    def open_file(event):
-        if not folder_list.curselection() or not file_list.curselection():
-            return
-        folder = folder_list.get(folder_list.curselection())
-        filename = file_list.get(file_list.curselection())
-        content = user_home[folder][filename]
+        users = list(ACCOUNTS.keys())
+        cols = 3
+        for idx, user in enumerate(users):
+            row = idx // cols
+            col = idx % cols
+            frame = tk.Frame(self.users_frame, bg="#2b3e50")
+            frame.grid(row=row, column=col, padx=20, pady=20)
 
-        viewer = tk.Toplevel(win)
-        viewer.title(filename)
-        text = tk.Text(viewer, wrap="word")
-        text.insert("1.0", content)
-        text.config(state="disabled")
-        text.pack(fill="both", expand=True)
+            icon = tk.Canvas(frame, width=80, height=80, bg="#4f7fb3", highlightthickness=0)
+            icon.create_oval(10, 10, 70, 70, fill="#87aade", outline="#ffffff")
+            icon.pack()
+            tk.Label(frame, text=user, fg="white", bg="#2b3e50").pack(pady=5)
 
-    folder_list.bind("<<ListboxSelect>>", show_files)
-    file_list.bind("<Double-Button-1>", open_file)
+            def make_cmd(u=user):
+                return lambda: self.login_user(u)
 
+            icon.bind("<Button-1>", lambda e, u=user: self.login_user(u))
+            frame.bind("<Button-1>", lambda e, u=user: self.login_user(u))
 
-# ---------- Apps: Browser ----------
+    def login_user(self, user):
+        info = ACCOUNTS.get(user, {})
+        pin = info.get("pin", "")
+        if pin:
+            prompt = T("login_pin_prompt").format(user=user)
+            entered = simpledialog.askstring(T("login_title"), prompt, show="*", parent=self)
+            if entered is None:
+                return
+            if entered != pin:
+                messagebox.showerror(T("login_title"), T("login_pin_wrong"))
+                return
+        global CURRENT_USER, CURRENT_LANG
+        CURRENT_USER = user
+        CURRENT_LANG = get_user_language(user)
+        init_vfs_for_user(CURRENT_USER)
+        self.after(100, self.launch_loader)
 
-def open_browser_app(parent):
-    win = tk.Toplevel(parent)
-    win.title(T("browser_title"))
-    win.geometry("600x400")
-    win.configure(bg="#dcdcdc")
-
-    toolbar = tk.Frame(win, bg="#bbbbbb")
-    toolbar.pack(fill="x")
-
-    url = tk.Entry(toolbar)
-    url.pack(side="left", fill="x", expand=True, padx=5, pady=5)
-
-    page = tk.Text(win, wrap="word", bg="white")
-    page.pack(fill="both", expand=True)
-
-    PAGES = {
-        "inicio": T("browser_page_start"),
-        "guadalinex": T("browser_page_guadalinex"),
-        "ayuda": T("browser_page_help"),
-    }
-
-    def load_page():
-        key = url.get().strip().lower()
-        page.delete("1.0", "end")
-        page.insert("1.0", PAGES.get(key, T("browser_not_found")))
-
-    tk.Button(toolbar, text="Ir", command=load_page).pack(side="right", padx=5)
-
-    url.insert(0, "inicio")
-    load_page()
-
+    def launch_loader(self):
+        self.destroy()
+        show_loader()
 
 # ---------- Mini shell ----------
 
@@ -563,7 +710,7 @@ class MiniShell:
         for canonical, aliases in mapping.items():
             if cmd in aliases:
                 return canonical
-        return cmd  # unknown
+        return cmd
 
     def run(self, cmd: str):
         if not cmd:
@@ -622,7 +769,6 @@ class MiniShell:
             return node[filename]
         return "Archivo no encontrado."
 
-
 # ---------- Terminal app ----------
 
 def open_terminal_app(parent, shell: MiniShell):
@@ -665,8 +811,90 @@ def open_terminal_app(parent, shell: MiniShell):
 
     text.bind("<Return>", on_enter)
 
+# ---------- Home app ----------
 
-# ---------- Antivirus app ----------
+def open_home_app(parent):
+    win = tk.Toplevel(parent)
+    win.title(f"{T('home_title')} - {CURRENT_USER}")
+    win.geometry("500x380")
+    win.configure(bg="#dcdcdc")
+
+    left = tk.Frame(win, bg="#ececec", width=160)
+    left.pack(side="left", fill="y")
+
+    right = tk.Frame(win, bg="#ffffff")
+    right.pack(side="right", fill="both", expand=True)
+
+    folder_list = tk.Listbox(left)
+    folder_list.pack(fill="y", expand=True, padx=5, pady=5)
+
+    file_list = tk.Listbox(right)
+    file_list.pack(fill="both", expand=True, padx=5, pady=5)
+
+    user_home = VFS["home"][CURRENT_USER]
+
+    for folder in user_home:
+        folder_list.insert("end", folder)
+
+    def show_files(event):
+        if not folder_list.curselection():
+            return
+        file_list.delete(0, "end")
+        folder = folder_list.get(folder_list.curselection())
+        for f in user_home[folder]:
+            file_list.insert("end", f)
+
+    def open_file(event):
+        if not folder_list.curselection() or not file_list.curselection():
+            return
+        folder = folder_list.get(folder_list.curselection())
+        filename = file_list.get(file_list.curselection())
+        content = user_home[folder][filename]
+
+        viewer = tk.Toplevel(win)
+        viewer.title(filename)
+        text = tk.Text(viewer, wrap="word")
+        text.insert("1.0", content)
+        text.config(state="disabled")
+        text.pack(fill="both", expand=True)
+
+    folder_list.bind("<<ListboxSelect>>", show_files)
+    file_list.bind("<Double-Button-1>", open_file)
+
+# ---------- Browser app ----------
+
+def open_browser_app(parent):
+    win = tk.Toplevel(parent)
+    win.title(T("browser_title"))
+    win.geometry("600x400")
+    win.configure(bg="#dcdcdc")
+
+    toolbar = tk.Frame(win, bg="#bbbbbb")
+    toolbar.pack(fill="x")
+
+    url = tk.Entry(toolbar)
+    url.pack(side="left", fill="x", expand=True, padx=5, pady=5)
+
+    page = tk.Text(win, wrap="word", bg="white")
+    page.pack(fill="both", expand=True)
+
+    PAGES = {
+        "inicio": T("browser_page_start"),
+        "guadalinex": T("browser_page_guadalinex"),
+        "ayuda": T("browser_page_help"),
+    }
+
+    def load_page():
+        key = url.get().strip().lower()
+        page.delete("1.0", "end")
+        page.insert("1.0", PAGES.get(key, T("browser_not_found")))
+
+    tk.Button(toolbar, text="Ir", command=load_page).pack(side="right", padx=5)
+
+    url.insert(0, "inicio")
+    load_page()
+
+# ---------- Antivirus app (admin-only via UAC) ----------
 
 def open_antivirus_app(parent):
     win = tk.Toplevel(parent)
@@ -713,6 +941,134 @@ def open_antivirus_app(parent):
 
     threading.Thread(target=scan, daemon=True).start()
 
+# ---------- UAC (admin prompt) ----------
+
+def require_admin(parent, action_callback):
+    if is_admin(CURRENT_USER):
+        action_callback()
+        return
+
+    load_accounts()
+    admins = [u for u, info in ACCOUNTS.items() if info.get("admin")]
+    if not admins:
+        messagebox.showerror(T("uac_title"), T("uac_failed"))
+        return
+
+    pin = simpledialog.askstring(T("uac_title"), T("uac_message"), show="*", parent=parent)
+    if pin is None:
+        return
+
+    for u in admins:
+        if ACCOUNTS[u].get("pin") == pin:
+            action_callback()
+            return
+
+    messagebox.showerror(T("uac_title"), T("uac_failed"))
+
+# ---------- Account settings app (admin-only) ----------
+
+def open_accounts_app(parent):
+    win = tk.Toplevel(parent)
+    win.title(T("accounts_title"))
+    win.geometry("450x350")
+    win.configure(bg="#dcdcdc")
+
+    left = tk.Frame(win, bg="#dcdcdc")
+    left.pack(side="left", fill="y", padx=10, pady=10)
+
+    right = tk.Frame(win, bg="#dcdcdc")
+    right.pack(side="right", fill="both", expand=True, padx=10, pady=10)
+
+    tk.Label(left, text=T("accounts_users"), bg="#dcdcdc").pack(anchor="w")
+    user_list = tk.Listbox(left, height=15)
+    user_list.pack(fill="y", expand=True)
+
+    def refresh_users():
+        user_list.delete(0, "end")
+        load_accounts()
+        for u, info in ACCOUNTS.items():
+            tag = " (admin)" if info.get("admin") else ""
+            user_list.insert("end", u + tag)
+
+    refresh_users()
+
+    def get_selected_user():
+        if not user_list.curselection():
+            messagebox.showwarning(T("accounts_title"), T("accounts_no_selection"))
+            return None
+        text = user_list.get(user_list.curselection())
+        if " (admin)" in text:
+            return text.replace(" (admin)", "")
+        return text
+
+    def create_user():
+        username = simpledialog.askstring(T("accounts_title"), T("accounts_new_username"), parent=win)
+        if not username:
+            return
+        username = username.strip()
+        if not username:
+            return
+        load_accounts()
+        if username in ACCOUNTS:
+            messagebox.showerror(T("accounts_title"), T("accounts_user_exists"))
+            return
+        pin = simpledialog.askstring(T("accounts_title"), T("accounts_new_pin"), show="*", parent=win)
+        is_adm = messagebox.askyesno(T("accounts_title"), T("accounts_is_admin"))
+        ACCOUNTS[username] = {
+            "pin": pin or "",
+            "admin": bool(is_adm),
+            "language": CURRENT_LANG,
+        }
+        save_accounts()
+        refresh_users()
+
+    def delete_user():
+        user = get_selected_user()
+        if not user:
+            return
+        if user == CURRENT_USER:
+            messagebox.showerror(T("accounts_title"), T("accounts_cannot_delete_self"))
+            return
+        if not messagebox.askyesno(T("accounts_title"), T("accounts_confirm_delete").format(user=user)):
+            return
+        load_accounts()
+        if user in ACCOUNTS:
+            del ACCOUNTS[user]
+            save_accounts()
+        refresh_users()
+
+    def change_pin():
+        user = get_selected_user()
+        if not user:
+            return
+        pin = simpledialog.askstring(T("accounts_title"), T("accounts_new_pin"), show="*", parent=win)
+        if pin is None:
+            return
+        load_accounts()
+        if user in ACCOUNTS:
+            ACCOUNTS[user]["pin"] = pin
+            save_accounts()
+        refresh_users()
+
+    def toggle_admin():
+        user = get_selected_user()
+        if not user:
+            return
+        load_accounts()
+        if user not in ACCOUNTS:
+            return
+        # prevent removing last admin
+        if ACCOUNTS[user].get("admin") and sum(1 for u in ACCOUNTS.values() if u.get("admin")) == 1:
+            messagebox.showerror(T("accounts_title"), T("accounts_cannot_demote_last_admin"))
+            return
+        ACCOUNTS[user]["admin"] = not ACCOUNTS[user].get("admin")
+        save_accounts()
+        refresh_users()
+
+    tk.Button(right, text=T("accounts_create"), command=create_user).pack(fill="x", pady=5)
+    tk.Button(right, text=T("accounts_delete"), command=delete_user).pack(fill="x", pady=5)
+    tk.Button(right, text=T("accounts_change_pin"), command=change_pin).pack(fill="x", pady=5)
+    tk.Button(right, text=T("accounts_toggle_admin"), command=toggle_admin).pack(fill="x", pady=5)
 
 # ---------- Shutdown screen ----------
 
@@ -723,7 +1079,6 @@ def show_shutdown_screen():
     win.configure(bg="#000000")
     tk.Label(win, text=T("shutdown_screen_text"), fg="white", bg="black", font=("Sans", 16)).pack(expand=True)
     win.after(2000, quit)
-
 
 # ---------- Desktop ----------
 
@@ -790,6 +1145,7 @@ class GuadalinexDesktop(tk.Tk):
         self.make_icon(frame, T("menu_browser"), self.open_browser, 1)
         self.make_icon(frame, T("menu_terminal"), self.open_terminal, 2)
         self.make_icon(frame, T("menu_antivirus"), self.open_antivirus, 3)
+        self.make_icon(frame, T("menu_accounts"), self.open_accounts, 4)
 
     def make_icon(self, parent, text, command, row):
         tk.Button(parent, text=text, width=14, height=2, command=command).grid(row=row, pady=10)
@@ -800,10 +1156,11 @@ class GuadalinexDesktop(tk.Tk):
         menu.add_command(label=T("menu_home"), command=self.open_home)
         menu.add_command(label=T("menu_terminal"), command=self.open_terminal)
         menu.add_command(label=T("menu_antivirus"), command=self.open_antivirus)
+        menu.add_command(label=T("menu_accounts"), command=self.open_accounts)
         menu.add_separator()
         menu.add_command(label=T("menu_about"), command=self.show_about)
-        menu.add_command(label=T("menu_reset_setup"), command=reset_setup)
         menu.add_separator()
+        menu.add_command(label=T("menu_logout"), command=self.logout)
         menu.add_command(label=T("menu_shutdown"), command=self.shutdown)
         menu.tk_popup(self.winfo_rootx() + 10, self.winfo_rooty() + 10)
 
@@ -817,39 +1174,51 @@ class GuadalinexDesktop(tk.Tk):
         open_terminal_app(self, self.shell)
 
     def open_antivirus(self):
-        open_antivirus_app(self)
+        require_admin(self, lambda: open_antivirus_app(self))
+
+    def open_accounts(self):
+        require_admin(self, lambda: open_accounts_app(self))
 
     def show_about(self):
         messagebox.showinfo(
             T("menu_about"),
-            f"{T('about_text')}\nUsuario: {CURRENT_USER}\nIdioma: {CURRENT_LANG}"
+            f"{T('about_text')}\nUsuario: {CURRENT_USER}\nIdioma: {CURRENT_LANG}\nAdmin: {is_admin(CURRENT_USER)}"
         )
+
+    def logout(self):
+        self.destroy()
+        show_login()
 
     def shutdown(self):
         if messagebox.askyesno(T("shutdown_confirm_title"), T("shutdown_confirm_text")):
             show_shutdown_screen()
             self.destroy()
 
-
 # ---------- Entry points ----------
 
 def show_loader():
     GuadalinexLoader().mainloop()
 
-
 def show_desktop():
     GuadalinexDesktop().mainloop()
-
 
 def show_setup():
     GuadalinexSetup().mainloop()
 
+def show_login():
+    load_accounts()
+    # set language to first account's language for login texts
+    global CURRENT_LANG
+    if ACCOUNTS:
+        first_user = next(iter(ACCOUNTS.keys()))
+        CURRENT_LANG = get_user_language(first_user)
+    LoginScreen().mainloop()
 
 # ---------- Main ----------
 
 if __name__ == "__main__":
-    if SETUP_FILE.exists():
-        load_setup_config()
-        show_loader()
+    load_accounts()
+    if ACCOUNTS_FILE.exists() and ACCOUNTS:
+        show_login()
     else:
         show_setup()
