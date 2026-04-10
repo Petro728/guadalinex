@@ -5,11 +5,13 @@ import threading
 from pathlib import Path
 import copy
 import json
+from datetime import datetime
 
 # ---------- Paths ----------
 
 BASE_DIR = Path.home()
 ACCOUNTS_FILE = BASE_DIR / ".guadalinex_accounts.json"
+BANS_FILE = BASE_DIR / ".guadalinex_bans.json"
 
 # ---------- Globals ----------
 
@@ -20,6 +22,27 @@ PANEL_HEIGHT = 32
 CURRENT_USER = None
 CURRENT_LANG = "Español"
 ACCOUNTS = {}  # username -> {pin, admin, language}
+BANS = {}      # username -> {reason, timestamp}
+
+VIOLATIONS = {}  # username -> count
+
+# ---------- Language codes & disallowed terms ----------
+
+LANG_CODES = {
+    "Español": "es",
+    "Inglés": "en",
+    "Catalán": "ca",
+    "Gallego": "gl",
+    "Pirata": "pir",
+}
+
+DISALLOWED_TERMS = {
+    "en": ["prohibited_term_1", "prohibited_term_2"],
+    "es": ["termino_prohibido_1", "termino_prohibido_2"],
+    "ca": ["terme_prohibit_1"],
+    "gl": ["termo_prohibido_1"],
+    "pir": ["forbidden_phrase_1"],
+}
 
 # ---------- Translations ----------
 
@@ -79,6 +102,7 @@ TRANSLATIONS = {
         "accounts_delete": "Eliminar usuario",
         "accounts_change_pin": "Cambiar PIN",
         "accounts_toggle_admin": "Alternar admin",
+        "accounts_ban_user": "Banear usuario",
         "accounts_new_username": "Nuevo nombre de usuario:",
         "accounts_new_pin": "Nuevo PIN (opcional):",
         "accounts_is_admin": "¿Administrador?",
@@ -87,6 +111,34 @@ TRANSLATIONS = {
         "accounts_confirm_delete": "¿Eliminar la cuenta {user}?",
         "accounts_no_selection": "Selecciona un usuario.",
         "accounts_cannot_demote_last_admin": "No puedes quitar el rol de admin del último administrador.",
+        "accounts_ban_reason": "Motivo del baneo:",
+        "tos_title": "Términos de uso de Guadalinex v1",
+        "tos_text": (
+            "TÉRMINOS DE USO (SIMULADOS)\n\n"
+            "Este sistema operativo es una simulación creada en Python.\n"
+            "No realiza cambios reales en tu equipo, ni ofrece garantías.\n\n"
+            "Al continuar, aceptas que:\n"
+            "- Todo es ficticio y educativo.\n"
+            "- No se almacena información sensible de forma real.\n"
+            "- No se permite el uso de términos prohibidos ni lenguaje abusivo.\n"
+            "- No se permiten intentos de acceso no autorizado a cuentas de administrador.\n"
+            "- No se permiten intentos de eludir PINs o modificar cuentas sin permiso.\n"
+            "- Las violaciones pueden resultar en la eliminación permanente de la cuenta.\n\n"
+            "Firma en el recuadro inferior para aceptar estos términos."
+        ),
+        "tos_sign_here": "Firma aquí:",
+        "tos_accept": "Aceptar y continuar",
+        "tos_clear": "Borrar firma",
+        "tos_must_sign": "Debes firmar antes de continuar.",
+        "ban_screen_title": "Acceso denegado",
+        "ban_screen_header": "ACCESO DENEGADO",
+        "ban_screen_body": "Tu cuenta ha sido eliminada de este sistema simulado.",
+        "ban_screen_reason": "Motivo:",
+        "ban_screen_footer": "Contacta con un administrador para volver a crear una cuenta.",
+        "ban_screen_back": "Volver al inicio de sesión",
+        "violation_warning_title": "Aviso de TOS",
+        "violation_warning_text": "Se ha detectado un comportamiento no permitido. Un nuevo intento puede resultar en baneo.",
+        "violation_ban_reason_auto": "Comportamiento no permitido detectado en el sistema.",
     },
     "Inglés": {
         "setup_title": "Initial setup of Guadalinex v1",
@@ -143,6 +195,7 @@ TRANSLATIONS = {
         "accounts_delete": "Delete user",
         "accounts_change_pin": "Change PIN",
         "accounts_toggle_admin": "Toggle admin",
+        "accounts_ban_user": "Ban user",
         "accounts_new_username": "New username:",
         "accounts_new_pin": "New PIN (optional):",
         "accounts_is_admin": "Administrator?",
@@ -151,7 +204,36 @@ TRANSLATIONS = {
         "accounts_confirm_delete": "Delete account {user}?",
         "accounts_no_selection": "Select a user.",
         "accounts_cannot_demote_last_admin": "You cannot remove admin role from the last administrator.",
+        "accounts_ban_reason": "Ban reason:",
+        "tos_title": "Guadalinex v1 Terms of Use",
+        "tos_text": (
+            "TERMS OF USE (SIMULATED)\n\n"
+            "This operating system is a simulation built in Python.\n"
+            "It does not make real changes to your machine and comes with no warranty.\n\n"
+            "By continuing, you agree that:\n"
+            "- Everything is fictional and educational.\n"
+            "- No real sensitive data is stored.\n"
+            "- Use of disallowed terms or abusive language is not permitted.\n"
+            "- Unauthorized attempts to access administrator accounts are not permitted.\n"
+            "- Attempts to bypass PINs or modify accounts without permission are not permitted.\n"
+            "- Violations may result in permanent account removal.\n\n"
+            "Sign in the box below to accept these terms."
+        ),
+        "tos_sign_here": "Sign here:",
+        "tos_accept": "Accept and continue",
+        "tos_clear": "Clear signature",
+        "tos_must_sign": "You must sign before continuing.",
+        "ban_screen_title": "Access denied",
+        "ban_screen_header": "ACCESS DENIED",
+        "ban_screen_body": "Your account has been removed from this simulated system.",
+        "ban_screen_reason": "Reason:",
+        "ban_screen_footer": "Contact an administrator to be recreated.",
+        "ban_screen_back": "Return to login",
+        "violation_warning_title": "TOS warning",
+        "violation_warning_text": "Disallowed behavior detected. Another attempt may result in a ban.",
+        "violation_ban_reason_auto": "Disallowed behavior detected in the system.",
     },
+    # Other languages reuse previous keys; they will fall back for TOS text if missing
     "Catalán": {
         "setup_title": "Configuració inicial de Guadalinex v1",
         "welcome": "Benvingut a Guadalinex v1",
@@ -207,6 +289,7 @@ TRANSLATIONS = {
         "accounts_delete": "Eliminar usuari",
         "accounts_change_pin": "Canviar PIN",
         "accounts_toggle_admin": "Alternar admin",
+        "accounts_ban_user": "Banear usuari",
         "accounts_new_username": "Nou nom d'usuari:",
         "accounts_new_pin": "Nou PIN (opcional):",
         "accounts_is_admin": "Administrador?",
@@ -215,6 +298,16 @@ TRANSLATIONS = {
         "accounts_confirm_delete": "Eliminar el compte {user}?",
         "accounts_no_selection": "Selecciona un usuari.",
         "accounts_cannot_demote_last_admin": "No pots treure el rol d'admin de l'últim administrador.",
+        "accounts_ban_reason": "Motiu del ban:",
+        "ban_screen_title": "Accés denegat",
+        "ban_screen_header": "ACCÉS DENEGAT",
+        "ban_screen_body": "El teu compte ha estat eliminat d'aquest sistema simulat.",
+        "ban_screen_reason": "Motiu:",
+        "ban_screen_footer": "Contacta amb un administrador per tornar a crear un compte.",
+        "ban_screen_back": "Tornar a l'inici de sessió",
+        "violation_warning_title": "Avís de TOS",
+        "violation_warning_text": "S'ha detectat un comportament no permès. Un nou intent pot resultar en ban.",
+        "violation_ban_reason_auto": "Comportament no permès detectat al sistema.",
     },
     "Gallego": {
         "setup_title": "Configuración inicial de Guadalinex v1",
@@ -271,6 +364,7 @@ TRANSLATIONS = {
         "accounts_delete": "Eliminar usuario",
         "accounts_change_pin": "Cambiar PIN",
         "accounts_toggle_admin": "Alternar admin",
+        "accounts_ban_user": "Banear usuario",
         "accounts_new_username": "Novo nome de usuario:",
         "accounts_new_pin": "Novo PIN (opcional):",
         "accounts_is_admin": "Administrador?",
@@ -279,6 +373,16 @@ TRANSLATIONS = {
         "accounts_confirm_delete": "Eliminar a conta {user}?",
         "accounts_no_selection": "Selecciona un usuario.",
         "accounts_cannot_demote_last_admin": "Non podes quitar o rol de admin do último administrador.",
+        "accounts_ban_reason": "Motivo do ban:",
+        "ban_screen_title": "Acceso denegado",
+        "ban_screen_header": "ACCESO DENEGADO",
+        "ban_screen_body": "A túa conta foi eliminada deste sistema simulado.",
+        "ban_screen_reason": "Motivo:",
+        "ban_screen_footer": "Contacta cun administrador para volver crear unha conta.",
+        "ban_screen_back": "Volver ao inicio de sesión",
+        "violation_warning_title": "Aviso de TOS",
+        "violation_warning_text": "Detectouse un comportamento non permitido. Un novo intento pode resultar en ban.",
+        "violation_ban_reason_auto": "Comportamento non permitido detectado no sistema.",
     },
     "Pirata": {
         "setup_title": "First riggin' o' Guadalinex v1",
@@ -335,6 +439,7 @@ TRANSLATIONS = {
         "accounts_delete": "Cast overboard",
         "accounts_change_pin": "Change secret code",
         "accounts_toggle_admin": "Promote/Demote captain",
+        "accounts_ban_user": "Brand as mutineer",
         "accounts_new_username": "New matey's name:",
         "accounts_new_pin": "New secret code (optional):",
         "accounts_is_admin": "Make this matey a captain?",
@@ -343,10 +448,37 @@ TRANSLATIONS = {
         "accounts_confirm_delete": "Cast {user} overboard?",
         "accounts_no_selection": "Pick a matey first.",
         "accounts_cannot_demote_last_admin": "Ye can't demote the last captain aboard.",
+        "accounts_ban_reason": "Why mark this matey a mutineer?",
+        "tos_title": "Guadalinex v1 Code o' Conduct",
+        "tos_text": (
+            "CODE O' CONDUCT (SIMULATED)\n\n"
+            "This vessel be but a Python‑forged illusion.\n"
+            "She makes no real waves on yer machine.\n\n"
+            "By sailin' on, ye agree:\n"
+            "- All be for learnin' and fun.\n"
+            "- No real treasure or secrets be stored.\n"
+            "- No cursed phrases or forbidden tongue be used.\n"
+            "- No sneakin' into the captain's quarters (admin) uninvited.\n"
+            "- No tamperin' with secret codes or crew ranks.\n"
+            "- Mutiny may see yer name struck from the crew list.\n\n"
+            "Sign the log below t' accept these terms."
+        ),
+        "tos_sign_here": "Sign the log:",
+        "tos_accept": "Swear the oath",
+        "tos_clear": "Wipe the ink",
+        "tos_must_sign": "Ye must sign afore we set sail.",
+        "ban_screen_title": "Gangplank barred",
+        "ban_screen_header": "ACCESS DENIED",
+        "ban_screen_body": "Yer name's been struck from this here simulated crew.",
+        "ban_screen_reason": "Charge:",
+        "ban_screen_footer": "Find a captain t' sign ye back aboard.",
+        "ban_screen_back": "Back t' gangplank",
+        "violation_warning_title": "Code o' Conduct warning",
+        "violation_warning_text": "The ship's bell rang—one more offense and ye'll be cast off.",
+        "violation_ban_reason_auto": "Code o' Conduct broken in the ship's systems.",
     },
 }
 
-# Shell command mapping: canonical -> localized
 SHELL_COMMANDS = {
     "Español": {
         "ls": ["ls", "listar"],
@@ -399,7 +531,7 @@ def T(key: str) -> str:
     lang = TRANSLATIONS.get(CURRENT_LANG, TRANSLATIONS["Español"])
     return lang.get(key, TRANSLATIONS["Español"].get(key, key))
 
-# ---------- Accounts management ----------
+# ---------- Accounts & bans management ----------
 
 def load_accounts():
     global ACCOUNTS
@@ -416,6 +548,21 @@ def save_accounts():
     with open(ACCOUNTS_FILE, "w", encoding="utf-8") as f:
         json.dump(ACCOUNTS, f, indent=2, ensure_ascii=False)
 
+def load_bans():
+    global BANS
+    if BANS_FILE.exists():
+        try:
+            with open(BANS_FILE, "r", encoding="utf-8") as f:
+                BANS = json.load(f)
+        except Exception:
+            BANS = {}
+    else:
+        BANS = {}
+
+def save_bans():
+    with open(BANS_FILE, "w", encoding="utf-8") as f:
+        json.dump(BANS, f, indent=2, ensure_ascii=False)
+
 def any_admin_exists():
     return any(info.get("admin") for info in ACCOUNTS.values())
 
@@ -426,6 +573,46 @@ def is_admin(user):
 def get_user_language(user):
     info = ACCOUNTS.get(user, {})
     return info.get("language", "Español")
+
+def ban_user(username: str, reason: str):
+    load_accounts()
+    load_bans()
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    BANS[username] = {
+        "reason": reason,
+        "timestamp": timestamp,
+    }
+    if username in ACCOUNTS:
+        del ACCOUNTS[username]
+    save_accounts()
+    save_bans()
+
+# ---------- TOS violation detection ----------
+
+def check_tos_violation(text: str, context: str, username: str):
+    text_l = text.lower()
+    user_lang = get_user_language(username)
+    code = LANG_CODES.get(user_lang, "en")
+
+    terms = set(DISALLOWED_TERMS.get("en", []))
+    terms.update(DISALLOWED_TERMS.get(code, []))
+
+    violated = any(term in text_l for term in terms)
+    if not violated and context == "admin_attempt":
+        violated = True
+
+    if not violated:
+        return
+
+    count = VIOLATIONS.get(username, 0) + 1
+    VIOLATIONS[username] = count
+
+    if count == 1:
+        messagebox.showwarning(T("violation_warning_title"), T("violation_warning_text"))
+    else:
+        reason = T("violation_ban_reason_auto")
+        ban_user(username, reason)
+        messagebox.showerror(T("ban_screen_title"), reason)
 
 # ---------- VFS ----------
 
@@ -527,6 +714,86 @@ class GuadalinexSetup(tk.Tk):
         CURRENT_LANG = lang
         init_vfs_for_user(CURRENT_USER)
 
+        self.after(100, self.launch_tos)
+
+    def launch_tos(self):
+        self.destroy()
+        show_tos()
+
+# ---------- TOS screen with signature ----------
+
+class TOSScreen(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title(T("tos_title"))
+        self.geometry("700x500")
+        self.configure(bg="#2b3e50")
+        self.resizable(False, False)
+
+        self.signed = False
+        self.last_x = None
+        self.last_y = None
+
+        title = tk.Label(
+            self,
+            text=T("tos_title"),
+            font=("Sans", 18, "bold"),
+            fg="white",
+            bg="#2b3e50"
+        )
+        title.pack(pady=10)
+
+        frame_text = tk.Frame(self, bg="#2b3e50")
+        frame_text.pack(fill="both", expand=True, padx=20, pady=(0, 10))
+
+        text = tk.Text(frame_text, wrap="word", height=10)
+        text.insert("1.0", T("tos_text"))
+        text.config(state="disabled")
+        text.pack(side="left", fill="both", expand=True)
+
+        scrollbar = tk.Scrollbar(frame_text, command=text.yview)
+        scrollbar.pack(side="right", fill="y")
+        text.config(yscrollcommand=scrollbar.set)
+
+        sig_label = tk.Label(self, text=T("tos_sign_here"), fg="white", bg="#2b3e50")
+        sig_label.pack(anchor="w", padx=20)
+
+        self.canvas = tk.Canvas(self, bg="white", height=150, cursor="pencil")
+        self.canvas.pack(fill="x", padx=20, pady=5)
+
+        self.canvas.bind("<Button-1>", self.start_draw)
+        self.canvas.bind("<B1-Motion>", self.draw)
+
+        btn_frame = tk.Frame(self, bg="#2b3e50")
+        btn_frame.pack(pady=10)
+
+        self.accept_btn = tk.Button(btn_frame, text=T("tos_accept"), state="disabled", command=self.accept)
+        self.accept_btn.pack(side="left", padx=10)
+
+        clear_btn = tk.Button(btn_frame, text=T("tos_clear"), command=self.clear_signature)
+        clear_btn.pack(side="left", padx=10)
+
+    def start_draw(self, event):
+        self.last_x = event.x
+        self.last_y = event.y
+
+    def draw(self, event):
+        if self.last_x is not None and self.last_y is not None:
+            self.canvas.create_line(self.last_x, self.last_y, event.x, event.y, fill="black", width=2)
+            self.signed = True
+            self.accept_btn.config(state="normal")
+        self.last_x = event.x
+        self.last_y = event.y
+
+    def clear_signature(self):
+        self.canvas.delete("all")
+        self.signed = False
+        self.accept_btn.config(state="disabled")
+
+    def accept(self):
+        if not self.signed:
+            messagebox.showwarning(T("tos_title"), T("tos_must_sign"))
+            return
         self.after(100, self.launch_login)
 
     def launch_login(self):
@@ -596,6 +863,81 @@ class GuadalinexLoader(tk.Tk):
         self.destroy()
         show_desktop()
 
+# ---------- Ban screen (BS2, red with big X) ----------
+
+class BanScreen(tk.Tk):
+    def __init__(self, username: str, reason: str):
+        super().__init__()
+        self.title(T("ban_screen_title"))
+        self.geometry("600x350")
+        self.configure(bg="#cc0000")
+        self.resizable(False, False)
+
+        tk.Label(
+            self,
+            text="✖",
+            font=("Sans", 72, "bold"),
+            fg="white",
+            bg="#cc0000"
+        ).pack(pady=10)
+
+        tk.Label(
+            self,
+            text=T("ban_screen_header"),
+            font=("Sans", 24, "bold"),
+            fg="white",
+            bg="#cc0000"
+        ).pack(pady=5)
+
+        tk.Label(
+            self,
+            text=T("ban_screen_body"),
+            font=("Sans", 12),
+            fg="white",
+            bg="#cc0000"
+        ).pack(pady=10)
+
+        frame = tk.Frame(self, bg="#cc0000")
+        frame.pack(pady=5)
+
+        tk.Label(
+            frame,
+            text=T("ban_screen_reason"),
+            font=("Sans", 11, "bold"),
+            fg="white",
+            bg="#cc0000"
+        ).pack(side="left")
+
+        tk.Label(
+            frame,
+            text=reason or "-",
+            font=("Sans", 11),
+            fg="white",
+            bg="#cc0000",
+            wraplength=450,
+            justify="left"
+        ).pack(side="left")
+
+        tk.Label(
+            self,
+            text=T("ban_screen_footer"),
+            font=("Sans", 11),
+            fg="white",
+            bg="#cc0000"
+        ).pack(pady=15)
+
+        tk.Button(
+            self,
+            text=T("ban_screen_back"),
+            command=self.back_to_login,
+            bg="#ffffff",
+            fg="#cc0000"
+        ).pack(pady=10)
+
+    def back_to_login(self):
+        self.destroy()
+        show_login()
+
 # ---------- Login screen (B1: icon grid) ----------
 
 class LoginScreen(tk.Tk):
@@ -631,7 +973,12 @@ class LoginScreen(tk.Tk):
             w.destroy()
 
         load_accounts()
-        if not ACCOUNTS:
+        load_bans()
+
+        users = list(ACCOUNTS.keys())
+        banned_users = list(BANS.keys())
+
+        if not users and not banned_users:
             tk.Label(
                 self.users_frame,
                 text=T("login_no_users"),
@@ -640,24 +987,33 @@ class LoginScreen(tk.Tk):
             ).pack()
             return
 
-        users = list(ACCOUNTS.keys())
+        all_users = [(u, False) for u in users] + [(u, True) for u in banned_users]
+
         cols = 3
-        for idx, user in enumerate(users):
+        for idx, (user, is_banned) in enumerate(all_users):
             row = idx // cols
             col = idx % cols
             frame = tk.Frame(self.users_frame, bg="#2b3e50")
             frame.grid(row=row, column=col, padx=20, pady=20)
 
-            icon = tk.Canvas(frame, width=80, height=80, bg="#4f7fb3", highlightthickness=0)
-            icon.create_oval(10, 10, 70, 70, fill="#87aade", outline="#ffffff")
+            color = "#4f7fb3" if not is_banned else "#7f0000"
+            icon = tk.Canvas(frame, width=80, height=80, bg=color, highlightthickness=0)
+            icon.create_oval(10, 10, 70, 70, fill="#87aade" if not is_banned else "#ff6666", outline="#ffffff")
             icon.pack()
-            tk.Label(frame, text=user, fg="white", bg="#2b3e50").pack(pady=5)
+            label_text = user + (" (ban)" if is_banned else "")
+            tk.Label(frame, text=label_text, fg="white", bg="#2b3e50").pack(pady=5)
 
-            def make_cmd(u=user):
-                return lambda: self.login_user(u)
+            if is_banned:
+                icon.bind("<Button-1>", lambda e, u=user: self.show_ban(u))
+                frame.bind("<Button-1>", lambda e, u=user: self.show_ban(u))
+            else:
+                icon.bind("<Button-1>", lambda e, u=user: self.login_user(u))
+                frame.bind("<Button-1>", lambda e, u=user: self.login_user(u))
 
-            icon.bind("<Button-1>", lambda e, u=user: self.login_user(u))
-            frame.bind("<Button-1>", lambda e, u=user: self.login_user(u))
+    def show_ban(self, user):
+        reason = BANS.get(user, {}).get("reason", "")
+        self.destroy()
+        BanScreen(user, reason).mainloop()
 
     def login_user(self, user):
         info = ACCOUNTS.get(user, {})
@@ -798,6 +1154,8 @@ def open_terminal_app(parent, shell: MiniShell):
             cmd = line.split("$", 1)[-1].strip()
         else:
             cmd = line.strip()
+
+        check_tos_violation(cmd, "terminal", shell.username)
 
         output = shell.run(cmd)
 
@@ -963,6 +1321,7 @@ def require_admin(parent, action_callback):
             action_callback()
             return
 
+    check_tos_violation("unauthorized_admin_access", "admin_attempt", CURRENT_USER)
     messagebox.showerror(T("uac_title"), T("uac_failed"))
 
 # ---------- Account settings app (admin-only) ----------
@@ -970,7 +1329,7 @@ def require_admin(parent, action_callback):
 def open_accounts_app(parent):
     win = tk.Toplevel(parent)
     win.title(T("accounts_title"))
-    win.geometry("450x350")
+    win.geometry("500x380")
     win.configure(bg="#dcdcdc")
 
     left = tk.Frame(win, bg="#dcdcdc")
@@ -1057,7 +1416,6 @@ def open_accounts_app(parent):
         load_accounts()
         if user not in ACCOUNTS:
             return
-        # prevent removing last admin
         if ACCOUNTS[user].get("admin") and sum(1 for u in ACCOUNTS.values() if u.get("admin")) == 1:
             messagebox.showerror(T("accounts_title"), T("accounts_cannot_demote_last_admin"))
             return
@@ -1065,10 +1423,24 @@ def open_accounts_app(parent):
         save_accounts()
         refresh_users()
 
+    def ban_selected_user():
+        user = get_selected_user()
+        if not user:
+            return
+        if user == CURRENT_USER:
+            messagebox.showerror(T("accounts_title"), T("accounts_cannot_delete_self"))
+            return
+        reason = simpledialog.askstring(T("accounts_title"), T("accounts_ban_reason"), parent=win)
+        if reason is None:
+            return
+        ban_user(user, reason)
+        refresh_users()
+
     tk.Button(right, text=T("accounts_create"), command=create_user).pack(fill="x", pady=5)
     tk.Button(right, text=T("accounts_delete"), command=delete_user).pack(fill="x", pady=5)
     tk.Button(right, text=T("accounts_change_pin"), command=change_pin).pack(fill="x", pady=5)
     tk.Button(right, text=T("accounts_toggle_admin"), command=toggle_admin).pack(fill="x", pady=5)
+    tk.Button(right, text=T("accounts_ban_user"), command=ban_selected_user).pack(fill="x", pady=5)
 
 # ---------- Shutdown screen ----------
 
@@ -1207,17 +1579,21 @@ def show_setup():
 
 def show_login():
     load_accounts()
-    # set language to first account's language for login texts
+    load_bans()
     global CURRENT_LANG
     if ACCOUNTS:
         first_user = next(iter(ACCOUNTS.keys()))
         CURRENT_LANG = get_user_language(first_user)
     LoginScreen().mainloop()
 
+def show_tos():
+    TOSScreen().mainloop()
+
 # ---------- Main ----------
 
 if __name__ == "__main__":
     load_accounts()
+    load_bans()
     if ACCOUNTS_FILE.exists() and ACCOUNTS:
         show_login()
     else:
